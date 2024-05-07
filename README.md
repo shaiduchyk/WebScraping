@@ -1,0 +1,2 @@
+# WebScraping
+Training WebScraping project.
