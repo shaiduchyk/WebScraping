@@ -42,8 +42,9 @@ class EsportsSpider(scrapy.Spider):
             "Games": f"{selector.css(
                 "a:nth-child(5) div.font-bold::text"
             ).get()}",
-            "Upcoming matches": self.parse_upcoming_matches(response),
-            "Live matches": self.parse_live_matches(response)
+            # "Upcoming matches": self.parse_upcoming_matches(response),
+            # "Live matches": self.parse_live_matches(response)
+            "Top orgs": self.parse_top_organization(response),
         }
 
     def parse_upcoming_matches(self, response: Response, **kwargs):
@@ -114,7 +115,7 @@ class EsportsSpider(scrapy.Spider):
         return matches_data
 
 
-    def parse_live_matches(self, response: Response, **kwargs):
+    def parse_live_matches(self, response: Response, **kwargs) -> dict:
         element = response.css(
             "#live_matches_block div.-mx-6.flex.flex-col.gap-y-1.-my-6 "
         ).get()
@@ -195,5 +196,38 @@ class EsportsSpider(scrapy.Spider):
 
         return live_matches_data
 
+    def parse_top_organization(self, response: Response, **kwargs) -> dict:
 
-    def parse_top_organization(self, response: Response):
+        top_container = response.xpath(
+            "//*[@id='top_blocks']//*[contains(@class, 'col-span-12')]"
+        )
+
+        team_names_by_tournaments_count = top_container[0].xpath(
+            ".//*[contains(@class, 'logo')]/@title"
+        ).getall()
+        teams_tournaments_count = top_container[0].xpath(
+            './/div[@class="value text-center !text-xs"]/@data-tippy-content'
+        ).getall()
+        team_tournament_dict = dict(
+            zip(team_names_by_tournaments_count, teams_tournaments_count))
+
+        team_names_by_matches_count = top_container[1].xpath(
+            ".//*[contains(@class, 'logo')]/@title").getall()
+        teams_matches_count = top_container[1].xpath(
+            './/div[@class="value text-center !text-xs"]/@data-tippy-content').getall()
+        team_matches_dict = dict(
+            zip(team_names_by_matches_count, teams_matches_count))
+
+        games = top_container[2].xpath(
+            ".//*[contains(@class, 'logo')]/@title").getall()
+        teams_by_viewers_count = top_container[2].xpath(
+            './/div[@class="value text-center !text-xs"]/@data-tippy-content').getall()
+        team_viewers_dict = dict(zip(games, teams_by_viewers_count))
+
+        top_organization = {
+            "Top Organization by Tournaments Count": team_tournament_dict,
+            "Top Organization by Matches Count": team_matches_dict,
+            "Top Games by Viewers Count": team_viewers_dict,
+        }
+
+        return top_organization
