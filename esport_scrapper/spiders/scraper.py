@@ -43,7 +43,7 @@ class EsportsSpider(scrapy.Spider):
                 "a:nth-child(5) div.font-bold::text"
             ).get()}",
             # "Upcoming matches": self.parse_upcoming_matches(response),
-            # "Live matches": self.parse_live_matches(response)
+            "Live matches": self.parse_live_matches(response),
             "Top orgs": self.parse_top_organization(response),
         }
 
@@ -114,85 +114,97 @@ class EsportsSpider(scrapy.Spider):
 
         return matches_data
 
-
     def parse_live_matches(self, response: Response, **kwargs) -> dict:
         element = response.css(
             "#live_matches_block div.-mx-6.flex.flex-col.gap-y-1.-my-6 "
         ).get()
         selector = Selector(text=element)
         live_matches_data = {}
+        try:
+            first_match_team_one = selector.css(
+                "a:nth-child(1) "
+                "div.flex.flex-wrap.items-center.flex-1 "
+                "> div:nth-child(3) > span::text"
+            ).get()
+            first_match_team_two = selector.css(
+                "a:nth-child(1) "
+                "div.flex.flex-wrap.items-center.flex-1 "
+                "> div:nth-child(1) > span::text"
+            ).get()
+            first_match_tournament = selector.css(
+                "a:nth-child(2) span.leading-4::text"
+            ).get().strip()
 
-        first_match_team_one = selector.css(
-            "a:nth-child(1) "
-            "div.flex.flex-wrap.items-center.flex-1 "
-            "> div:nth-child(3) > span::text"
-        ).get()
-        first_match_team_two = selector.css(
-            "a:nth-child(1) "
-            "div.flex.flex-wrap.items-center.flex-1 "
-            "> div:nth-child(1) > span::text"
-        ).get()
-        first_match_tournament = selector.css(
-            "a:nth-child(2) span.leading-4::text"
-        ).get().strip()
+            if (
+                    first_match_team_one
+                    and first_match_team_two
+                    and first_match_tournament
+            ):
+                live_matches_data[
+                    "First Match"
+                ] = (f"{first_match_team_one} vs {first_match_team_two},"
+                     f" {first_match_tournament})")
+        except Exception as error:
+            live_matches_data["First Match"] = "Match not found"
+            self.logger.error(f"LIVE_MATCHES_ERROR: {error}")
 
-        if (
-                first_match_team_one
-                and first_match_team_two
-                and first_match_tournament
-        ):
-            live_matches_data[
-                "First Match"
-            ] = (f"{first_match_team_one} vs {first_match_team_two},"
-                 f" {first_match_tournament})")
 
-        second_match_team_one = selector.css(
-            "a:nth-child(2) "
-            "div.flex.flex-wrap.items-center.flex-1 "
-            "> div:nth-child(1) > span::text"
-        ).get()
-        second_match_team_two = selector.css(
-            "a:nth-child(2) "
-            "div.flex.flex-wrap.items-center.flex-1 "
-            "> div:nth-child(3) > span::text"
-        ).get()
-        second_match_tournament = selector.css(
-            "a:nth-child(2) span.leading-4::text"
-        ).get().strip()
+        try:
+            second_match_team_one = selector.css(
+                "a:nth-child(2) "
+                "div.flex.flex-wrap.items-center.flex-1 "
+                "> div:nth-child(1) > span::text"
+            ).get()
+            second_match_team_two = selector.css(
+                "a:nth-child(2) "
+                "div.flex.flex-wrap.items-center.flex-1 "
+                "> div:nth-child(3) > span::text"
+            ).get()
+            second_match_tournament = selector.css(
+                "a:nth-child(2) span.leading-4::text"
+            ).get().strip()
 
-        if (
-                second_match_team_one
-                and second_match_team_two
-                and second_match_tournament
-        ):
-            live_matches_data[
-                "Second Match"
-            ] = (f"{second_match_team_one} vs {second_match_team_two},"
-                 f" {second_match_tournament})")
+            if (
+                    second_match_team_one
+                    and second_match_team_two
+                    and second_match_tournament
+            ):
+                live_matches_data[
+                    "Second Match"
+                ] = (f"{second_match_team_one} vs {second_match_team_two},"
+                     f" {second_match_tournament})")
 
-        third_match_team_one = selector.css(
-            "a:nth-child(3) "
-            "div.flex.flex-wrap.items-center.flex-1 "
-            "> div:nth-child(1) > span::text"
-        ).get()
-        third_match_team_two = selector.css(
-            "a:nth-child(3) "
-            "div.flex.flex-wrap.items-center.flex-1 "
-            "> div:nth-child(3) > span::text"
-        ).get()
-        third_match_tournament = selector.css(
-            "a:nth-child(3) span.leading-4::text"
-        ).get().strip()
+        except Exception as error:
+            live_matches_data["Second Match"] = "Match not found"
+            self.logger.error(F"LIVE_MATCHES_ERROR: {error}")
 
-        if (
-                third_match_team_one
-                and third_match_team_two
-                and third_match_tournament
-        ):
-            live_matches_data[
-                "Third Match"
-            ] = (f"{third_match_team_one} vs {third_match_team_two},"
-                 f" {third_match_tournament})")
+        try:
+            third_match_team_one = selector.css(
+                "a:nth-child(3) "
+                "div.flex.flex-wrap.items-center.flex-1 "
+                "> div:nth-child(1) > span::text"
+            ).get()
+            third_match_team_two = selector.css(
+                "a:nth-child(3) "
+                "div.flex.flex-wrap.items-center.flex-1 "
+                "> div:nth-child(3) > span::text"
+            ).get()
+            third_match_tournament = selector.css(
+                "a:nth-child(3) span.leading-4::text"
+            ).get().strip()
+
+            if (
+                    third_match_team_one
+                    and third_match_team_two
+                    and third_match_tournament
+            ):
+                live_matches_data[
+                    "Third Match"
+                ] = (f"{third_match_team_one} vs {third_match_team_two},"
+                     f" {third_match_tournament})")
+        except Exception as error:
+            live_matches_data["Third Match"] = "Match not found"
+            self.logger.error(F"LIVE_MATCHES_ERROR: {error}")
 
         return live_matches_data
 
